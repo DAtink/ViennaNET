@@ -8,6 +8,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Serilog;
+using Serilog.Events;
+using Microsoft.AspNetCore.Hosting;
 
 namespace ViennaNET.WebApi.Configurators.Common
 {
@@ -23,7 +26,8 @@ namespace ViennaNET.WebApi.Configurators.Common
     /// <returns></returns>
     public static ICompanyHostBuilder UseCommonModules(this ICompanyHostBuilder companyHostBuilder)
     {
-      return companyHostBuilder.ConfigureApp(ConfigureLogger)
+      return companyHostBuilder.AddHostBuilderAction(AddLogger)
+                               .ConfigureApp(AddLogForRequests)
                                .ConfigureApp(ConfigureCompanyMiddleware)
                                .RegisterServices(RegisterCommonServices);
     }
@@ -40,16 +44,34 @@ namespace ViennaNET.WebApi.Configurators.Common
     }
 
     /// <summary>
-    /// Регистрирует логгер из ViennaNET.Logging
+    /// Добавляет Middleware для логирования запросов и ответов сервиса
     /// </summary>
     /// <param name="builder"></param>
     /// <param name="configuration"></param>
     /// <param name="env"></param>
     /// <param name="container"></param>
-    internal static void ConfigureLogger(
+    internal static void AddLogForRequests(
       IApplicationBuilder builder, IConfiguration configuration, IHostEnvironment env, object container)
     {
-      Logger.Configure(new LoggerJsonCfgFileConfiguration(configuration));
+      builder.UseSerilogRequestLogging();
+    }
+
+    /// <summary>
+    /// Добавляет Middleware для логирования запросов и ответов сервиса
+    /// </summary>
+    /// <param name="builder"></param>
+    /// <param name="configuration"></param>
+    /// <param name="env"></param>
+    /// <param name="container"></param>
+    internal static void AddLogger(IWebHostBuilder builder, IConfiguration configuration)
+    {
+      builder.UseSerilog((ctx, sc) =>
+      {
+        sc.MinimumLevel.Debug()
+            .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+            .Enrich.FromLogContext()
+            .WriteTo.Console();
+      });
     }
 
     /// <summary>
@@ -63,8 +85,8 @@ namespace ViennaNET.WebApi.Configurators.Common
       IApplicationBuilder builder, IConfiguration configuration, IHostEnvironment env, object container)
     {
       builder.UseMiddleware<RequestRegistrationMiddleware>();
-      builder.UseMiddleware<SetUpLoggerMiddleware>();
-      builder.UseMiddleware<LogRequestAndResponseMiddleware>();
+      //builder.UseMiddleware<SetUpLoggerMiddleware>();
+      //builder.UseMiddleware<LogRequestAndResponseMiddleware>();
     }
   }
 }

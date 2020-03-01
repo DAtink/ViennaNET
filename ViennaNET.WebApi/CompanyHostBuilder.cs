@@ -13,7 +13,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices.ComTypes;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
@@ -45,6 +44,7 @@ namespace ViennaNET.WebApi
     private Action<IServiceCollection, IConfiguration, object> _configureContainerAction;
     private Action<IApplicationBuilder, object, IConfiguration> _initializeContainerAction;
     private readonly List<Action<IServiceCollection, IConfiguration>> _servicesToRegister;
+    private readonly List<Action<IWebHostBuilder, IConfiguration>> _hostBuilderActions;
 
     private Action<IConfiguration> _onStartAction;
     private Action<IConfiguration> _onStopAction;
@@ -59,6 +59,7 @@ namespace ViennaNET.WebApi
       _addMiddlewareActions = new List<Action<IApplicationBuilder>>();
       _servicesToRegister = new List<Action<IServiceCollection, IConfiguration>>();
       _mvcBuilderActions = new List<Action<IMvcCoreBuilder, IConfiguration>>();
+      _hostBuilderActions = new List<Action<IWebHostBuilder, IConfiguration>>();
     }
 
     /// <summary>
@@ -195,6 +196,12 @@ namespace ViennaNET.WebApi
       var hostBuilder = WebHost.CreateDefaultBuilder(args);
 
       _useServerAction(hostBuilder);
+
+      foreach (var builderAction in _hostBuilderActions)
+      {
+        builderAction.Invoke(hostBuilder, Configuration);
+      }
+
       hostBuilder.UseContentRoot(pathToContentRoot)
                  .ConfigureAppConfiguration(ConfigureAppConfiguration)
                  .ConfigureServices(ConfigureServices)

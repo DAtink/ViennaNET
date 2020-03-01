@@ -136,6 +136,18 @@ namespace ViennaNET.WebApi
     }
 
     /// <summary>
+    /// Добавляет операцию для конфигурирования WebHostBuilder-а
+    /// </summary>
+    /// <param name="hostBuilderAction"></param>
+    /// <returns></returns>
+    public ICompanyHostBuilder AddHostBuilderAction(Action<IWebHostBuilder, IConfiguration> hostBuilderAction)
+    {
+      _hostBuilderActions.Add(hostBuilderAction);
+
+      return this;
+    }
+
+    /// <summary>
     /// Добавляет операцию, вызываемую после старта сервиса
     /// </summary>
     /// <param name="action"></param>

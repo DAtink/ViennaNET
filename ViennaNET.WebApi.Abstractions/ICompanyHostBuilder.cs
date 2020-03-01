@@ -98,6 +98,13 @@ namespace ViennaNET.WebApi.Abstractions
     ICompanyHostBuilder UseServer(Action<IWebHostBuilder> useServerAction);
 
     /// <summary>
+    /// Добавляет операцию для конфигурирования WebHostBuilder-а
+    /// </summary>
+    /// <param name="hostBuilderAction"></param>
+    /// <returns></returns>
+    ICompanyHostBuilder AddHostBuilderAction(Action<IWebHostBuilder, IConfiguration> hostBuilderAction);
+
+    /// <summary>
     /// Добавляет операцию, вызываемую после старта сервиса
     /// </summary>
     /// <param name="action"></param>
